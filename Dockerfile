@@ -1,14 +1,17 @@
-# 1. Use Java JDK 20
-FROM eclipse-temurin:20-jdk-alpine
-
-# 2. Set a folder inside the container
+# Stage 1 - Build the application
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# 3. Copy your built JAR into the container
-COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
+COPY pom.xml .
+COPY src ./src
 
-# 4. Expose port 8080 so we can access it
+RUN mvn clean package -DskipTests
+
+# Stage 2 - Run the application
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+
+COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
-
-# 5. Run the JAR when container starts
 ENTRYPOINT ["java","-jar","app.jar"]
